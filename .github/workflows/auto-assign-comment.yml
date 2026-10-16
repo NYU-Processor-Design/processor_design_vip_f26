@@ -10,7 +10,7 @@ permissions:
 jobs:
   manage-assignees:
     # Run only for issue comments (excluding pull requests)
-    if: !github.event.issue.pull_request
+    if: '!github.event.issue.pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Manage Assignees
