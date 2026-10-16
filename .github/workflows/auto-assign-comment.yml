@@ -1,0 +1,62 @@
+name: Auto Assign/Unassign on Comment
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+
+jobs:
+  manage-assignees:
+    # Run only for issue comments (excluding pull requests)
+    if: !github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Manage Assignees
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const commenter = context.payload.comment.user.login;
+            const commentBody = context.payload.comment.body.toLowerCase();
+            const currentAssignees = issue.assignees || [];
+            const MAX_ASSIGNEES = 10;
+
+            const isAssigned = currentAssignees.some(a => a.login === commenter);
+
+            // Trigger 1: Assign user
+            if (commentBody.includes('i want to work on this')) {
+              if (currentAssignees.length >= MAX_ASSIGNEES) {
+                console.log(`Issue #${issue.number} has reached the maximum of ${MAX_ASSIGNEES} assignees.`);
+                return;
+              }
+              if (isAssigned) {
+                console.log(`${commenter} is already assigned to issue #${issue.number}.`);
+                return;
+              }
+
+              await github.rest.issues.addAssignees({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                assignees: [commenter]
+              });
+              console.log(`Successfully assigned ${commenter} to issue #${issue.number}.`);
+            }
+
+            // Trigger 2: Unassign user
+            else if (commentBody.includes('unassign me')) {
+              if (!isAssigned) {
+                console.log(`${commenter} is not currently assigned to issue #${issue.number}.`);
+                return;
+              }
+
+              await github.rest.issues.removeAssignees({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                assignees: [commenter]
+              });
+              console.log(`Successfully unassigned ${commenter} from issue #${issue.number}.`);
+            }
