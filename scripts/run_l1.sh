@@ -25,12 +25,12 @@ for tb in testbench/level1_tb/*_tb.sv testbench/level1_tb/*_tb.cpp; do
     case $tb in
         *.sv)
             iverilog -g2012 -I "$inc" -s "$name" -o "$out/$name.vvp" "$tb" "${src[@]}" > "$log" 2>&1 &&
-                timeout 60 vvp -n "$out/$name.vvp" >> "$log" 2>&1
+                timeout 60 vvp -n "$out/$name.vvp" +wave="$out/$file.vcd" >> "$log" 2>&1
             ;;
         *.cpp)
-            verilator --cc --exe --build -Wno-fatal --top-module "${name%_tb}" -Mdir "$out/$name" \
+            verilator --cc --exe --build --trace -Wno-fatal --top-module "${name%_tb}" -Mdir "$out/$name" \
                 -CFLAGS "-I$PWD/$inc" -o "$name" "${src[@]}" "$PWD/$tb" > "$log" 2>&1 &&
-                timeout 60 "$out/$name/$name" >> "$log" 2>&1
+                timeout 60 "$out/$name/$name" +wave="$out/$file.vcd" >> "$log" 2>&1
             ;;
     esac
 

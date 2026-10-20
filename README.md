@@ -61,6 +61,6 @@ The same checks run locally and in CI (`.github/workflows/sim.yml`, on every pus
 * `make l1`: runs every non-empty level 1 testbench in `testbench/level1_tb`. A test passes only if it prints `TEST PASSED`.
 	* `<module>_tb.sv` runs with Icarus.
 	* `<module>_tb.cpp` is built with Verilator against `src/<module>.sv`.
-	* Logs go to `build/l1/`.
+	* Logs and waveforms go to `build/l1/` (`<testbench file>.log` and `<testbench file>.vcd`).
 * `make table-check`: fails if `testbench/common/control_table.svh` is out of date with `docs/control_table.csv`; run `python3 scripts/gen_control_table.py` to regenerate it.
 * `make ci`: runs all of the above, in that order. This is what CI runs.
