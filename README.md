@@ -52,3 +52,15 @@ Within unit and integration testing, there are three levels of testing which is 
 * **Level 2 Verification:** tests are more thorough in nature, and now use SystemC testbenches and Verilator as a simulation tool. Various functionality of the unit or integration is tested by passing in various inputs and using assertions to ensure correctness.
 * **Level 3 Verification:** these tests use the industry-standard Universal Verification Methodology (UVM) class library for SystemVerilog in order to test specific functions of a unit or integration that the other tests haven't caught. This includes directed testing, constrained random testing, error injection, edge cases such as overflow and underflow, and more.
 
+### Running the Checks
+
+The same checks run locally and in CI (`.github/workflows/sim.yml`, on every push and pull request). They need Icarus Verilog, Verilator, g++, make, and Python 3.
+
+* `make lint`: lints each module in `src/` with `verilator -Wall`, then compiles everything with Icarus.
+	* Modules listed in `LINT_SKIP` in the `Makefile` are unfinished stubs: they still fail on errors, but warnings are not enforced. Remove your module from that list in the pull request that implements it.
+* `make l1`: runs every non-empty level 1 testbench in `testbench/level1_tb`. A test passes only if it prints `TEST PASSED`.
+	* `<module>_tb.sv` runs with Icarus.
+	* `<module>_tb.cpp` is built with Verilator against `src/<module>.sv`.
+	* Logs go to `build/l1/`.
+* `make table-check`: fails if `testbench/common/control_table.svh` is out of date with `docs/control_table.csv`; run `python3 scripts/gen_control_table.py` to regenerate it.
+* `make ci`: runs all of the above, in that order. This is what CI runs.

@@ -1,7 +1,5 @@
 SRC        := $(wildcard src/*.sv)
 MODULES    := $(basename $(notdir $(SRC)))
-INC        := testbench/common
-SIM        ?= iverilog
 TABLE_GEN  := scripts/gen_control_table.py
 
 # Stubs whose lint warnings are not enforced yet. Remove a module from this
@@ -25,15 +23,12 @@ lint:
 	@iverilog -g2012 -o /dev/null $(SRC)
 
 l1:
-	@scripts/run_l1.sh $(SIM)
+	@scripts/run_l1.sh
 
 table-check:
 	@python3 $(TABLE_GEN) --check
 
-ci: lint
-	@scripts/run_l1.sh iverilog
-	@scripts/run_l1.sh verilator
-	@$(if $(wildcard $(TABLE_GEN)),$(MAKE) --no-print-directory table-check)
+ci: lint l1 table-check
 
 clean:
 	rm -rf build
