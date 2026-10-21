@@ -4,8 +4,17 @@
 // Checks use !== / !== 1'b1, so X and Z count as failures.
 // End every test with `TB_FINISH, which prints TEST PASSED or TEST FAILED;
 // test runners use that line to decide pass/fail.
+// Every test dumps a waveform of the whole design to <testbench>.vcd, or to the
+// path given with +wave=<file>.
 
 int tb_errors = 0;
+string tb_wave_file;
+
+initial begin
+    if (!$value$plusargs("wave=%s", tb_wave_file)) tb_wave_file = $sformatf("%m.vcd");
+    $dumpfile(tb_wave_file);
+    $dumpvars;
+end
 
 `define CHECK(COND, MSG) \
     begin \

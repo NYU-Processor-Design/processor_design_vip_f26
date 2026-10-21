@@ -11,12 +11,12 @@ int main(int argc, char** argv) {
     dut.inA = 2;
     dut.inB = 3;
     dut.ALU_funct = 0;  // ADD
-    dut.eval();
+    tb_eval(dut);
     CHECK_EQ(dut.out, 5, "2 + 3");
 
     dut.inA = 0xFFFFFFFF;
     dut.inB = 1;
-    dut.eval();
+    tb_eval(dut);
     CHECK_EQ(dut.out, 0, "wraps on overflow");
     CHECK(dut.zflag == 1, "zero flag set");
 
