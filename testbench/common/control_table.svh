@@ -25,7 +25,7 @@ function automatic ctrl_t ctrl_expected(input logic [6:0] opcode, input logic [2
     casez ({opcode, funct3, instr30})
         11'b0110111_???_?: ctrl_expected = {1'd0, 1'd1, 2'd0, 1'd1, 1'd0, 2'd1, 1'd1, 4'd0, 1'd0, 2'd0}; // LUI
         11'b0010111_???_?: ctrl_expected = {1'd0, 1'd1, 2'd0, 1'd1, 1'd0, 2'd2, 1'd1, 4'd0, 1'd0, 2'd0}; // AUIPC
-        11'b1101111_???_?: ctrl_expected = {1'd0, 1'd0, 2'd1, 1'd1, 1'd0, 2'd2, 1'd1, 4'd0, 1'd0, 2'd0}; // JAL
+        11'b1101111_???_?: ctrl_expected = {1'd0, 1'd0, 2'd1, 1'd1, 1'd0, 2'd2, 1'd1, 4'd10, 1'd0, 2'd0}; // JAL
         11'b1100111_000_?: ctrl_expected = {1'd0, 1'd0, 2'd1, 1'd1, 1'd0, 2'd0, 1'd1, 4'd10, 1'd0, 2'd0}; // JALR
         11'b1100011_000_?: ctrl_expected = {1'd1, 1'd1, 2'd0, 1'd0, 1'd0, 2'd0, 1'd0, 4'd1, 1'd0, 2'd0}; // BEQ
         11'b1100011_001_?: ctrl_expected = {1'd1, 1'd1, 2'd0, 1'd0, 1'd0, 2'd0, 1'd0, 4'd1, 1'd0, 2'd0}; // BNE

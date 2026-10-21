@@ -1,7 +1,7 @@
 instr,opcode,funct3,instr30,branch_decoder_on,mux_PC,mux_reg,RegWrite,MemWrite,mux_ALUA,mux_ALUB,ALU_funct,sign_val,read_size
 LUI,0110111,x,x,0,1,0,1,0,1,1,0,x,x
 AUIPC,0010111,x,x,0,1,0,1,0,2,1,0,x,x
-JAL,1101111,x,x,0,0,1,1,0,2,1,0,x,x
+JAL,1101111,x,x,0,0,1,1,0,2,1,10,x,x
 JALR,1100111,000,x,0,0,1,1,0,0,1,10,x,x
 BEQ,1100011,000,x,1,1,x,0,0,0,0,1,x,x
 BNE,1100011,001,x,1,1,x,0,0,0,0,1,x,x
