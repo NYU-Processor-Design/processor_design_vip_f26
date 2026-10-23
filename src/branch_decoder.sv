@@ -5,9 +5,6 @@ module branch_decoder (
     input logic ALU_out_lsb,
     output logic branch_decision  // 0: don't branch, 1: branch
 );
-
-  int errors=0;
-  int tests_run = 0;
   localparam logic [2:0] FUNCT3_BEQ = 3'b000;
   localparam logic [2:0] FUNCT3_BNE = 3'b001;
   localparam logic [2:0] FUNCT3_BLT = 3'b100;
