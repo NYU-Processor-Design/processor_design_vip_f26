@@ -5,14 +5,14 @@ module branch_decoder_tb;
   logic       ALU_out_lsb;
   logic       branch_decision;
 
-  int errors = 0;
-  int tests_run = 0;
+  int         errors = 0;
+  int         tests_run = 0;
 
   // RV32I branch funct3 encodings, taken from the spec (not the DUT)
-  localparam logic [2:0] FUNCT3_BEQ = 3'b000;
-  localparam logic [2:0] FUNCT3_BNE = 3'b001;
-  localparam logic [2:0] FUNCT3_BLT = 3'b100;
-  localparam logic [2:0] FUNCT3_BGE = 3'b101;
+  localparam logic [2:0] FUNCT3_BEQ  = 3'b000;
+  localparam logic [2:0] FUNCT3_BNE  = 3'b001;
+  localparam logic [2:0] FUNCT3_BLT  = 3'b100;
+  localparam logic [2:0] FUNCT3_BGE  = 3'b101;
   localparam logic [2:0] FUNCT3_BLTU = 3'b110;
   localparam logic [2:0] FUNCT3_BGEU = 3'b111;
 
@@ -25,8 +25,8 @@ module branch_decoder_tb;
   );
 
   // apply inputs, wait for comb logic to settle, compare against expected
-  task automatic check(input logic on, input logic [2:0] f3, input logic z,
-                       input logic lsb, input logic expected, input string name);
+  task automatic check(input logic on, input logic [2:0] f3, input logic z, input logic lsb,
+                       input logic expected, input string name);
     branch_decoder_on = on;
     funct3 = f3;
     zflag = z;
@@ -34,34 +34,28 @@ module branch_decoder_tb;
     #10;
     tests_run++;
     if (branch_decision !== expected) begin
-      $display("FAIL %-5s on=%b funct3=%b z=%b lsb=%b : got %b, expected %b",
-               name, on, f3, z, lsb, branch_decision, expected);
+      $display("FAIL %-5s on=%b funct3=%b z=%b lsb=%b : got %b, expected %b", name, on, f3, z, lsb,
+               branch_decision, expected);
       errors++;
     end else begin
-      $display("PASS %-5s on=%b funct3=%b z=%b lsb=%b : %b",
-               name, on, f3, z, lsb, branch_decision);
+      $display("PASS %-5s on=%b funct3=%b z=%b lsb=%b : %b", name, on, f3, z, lsb, branch_decision);
     end
   endtask
 
-function automatic logic expected_branch(
-    input logic on,
-    input logic [2:0] f3,
-    input logic z,
-    input logic lsb
-);
-    if (!on)
-        return 1'b0;
+  function automatic logic expected_branch(input logic on, input logic [2:0] f3, input logic z,
+                                           input logic lsb);
+    if (!on) return 1'b0;
 
     case (f3)
-        FUNCT3_BEQ:  return z;
-        FUNCT3_BNE:  return ~z;
-        FUNCT3_BLT:  return lsb;
-        FUNCT3_BGE:  return ~lsb;
-        FUNCT3_BLTU: return lsb;
-        FUNCT3_BGEU: return ~lsb;
-        default:     return 1'b0;
+      FUNCT3_BEQ:  return z;
+      FUNCT3_BNE:  return ~z;
+      FUNCT3_BLT:  return lsb;
+      FUNCT3_BGE:  return ~lsb;
+      FUNCT3_BLTU: return lsb;
+      FUNCT3_BGEU: return ~lsb;
+      default:     return 1'b0;
     endcase
-endfunction
+  endfunction
 
 
 
@@ -122,10 +116,10 @@ endfunction
     // Decoder disabled
     // Must never branch when off
     // ============================
-    check(0, FUNCT3_BEQ,  1, 0, 0, "Disabled BEQ");
-    check(0, FUNCT3_BNE,  0, 0, 0, "Disabled BNE");
-    check(0, FUNCT3_BLT,  0, 1, 0, "Disabled BLT");
-    check(0, FUNCT3_BGE,  0, 0, 0, "Disabled BGE");
+    check(0, FUNCT3_BEQ, 1, 0, 0, "Disabled BEQ");
+    check(0, FUNCT3_BNE, 0, 0, 0, "Disabled BNE");
+    check(0, FUNCT3_BLT, 0, 1, 0, "Disabled BLT");
+    check(0, FUNCT3_BGE, 0, 0, 0, "Disabled BGE");
     check(0, FUNCT3_BLTU, 0, 1, 0, "Disabled BLTU");
     check(0, FUNCT3_BGEU, 0, 0, 0, "Disabled BGEU");
 
@@ -157,14 +151,11 @@ endfunction
     // Test all 64 binary input combinations
     // ============================
     for (int i = 0; i < 64; i++) begin
-        check(
-            i[5],       // enable
-            i[4:2],     // funct3
-            i[1],       // zflag
-            i[0],       // ALU_out_lsb
-            expected_branch(i[5], i[4:2], i[1], i[0]),
-            "Exhaustive"
-        );
+      check(i[5],  // enable
+            i[4:2],  // funct3
+            i[1],  // zflag
+            i[0],  // ALU_out_lsb
+            expected_branch(i[5], i[4:2], i[1], i[0]), "Exhaustive");
     end
 
     $display("\n========== TEST SUMMARY ==========");
