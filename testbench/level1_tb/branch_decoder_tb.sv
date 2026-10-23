@@ -1,12 +1,11 @@
 module branch_decoder_tb;
+  `include "tb_utils.svh"
+
   logic       branch_decoder_on;
   logic [2:0] funct3;
   logic       zflag;
   logic       ALU_out_lsb;
   logic       branch_decision;
-
-  int         errors = 0;
-  int         tests_run = 0;
 
   // RV32I branch funct3 encodings, taken from the spec (not the DUT)
   localparam logic [2:0] FUNCT3_BEQ  = 3'b000;
@@ -32,14 +31,8 @@ module branch_decoder_tb;
     zflag = z;
     ALU_out_lsb = lsb;
     #10;
-    tests_run++;
-    if (branch_decision !== expected) begin
-      $display("FAIL %-5s on=%b funct3=%b z=%b lsb=%b : got %b, expected %b", name, on, f3, z, lsb,
-               branch_decision, expected);
-      errors++;
-    end else begin
-      $display("PASS %-5s on=%b funct3=%b z=%b lsb=%b : %b", name, on, f3, z, lsb, branch_decision);
-    end
+    `CHECK_EQ(branch_decision, expected, $sformatf(
+              "%s (on=%b funct3=%b z=%b lsb=%b)", name, on, f3, z, lsb));
   endtask
 
   function automatic logic expected_branch(input logic on, input logic [2:0] f3, input logic z,
@@ -57,13 +50,7 @@ module branch_decoder_tb;
     endcase
   endfunction
 
-
-
   initial begin
-    $dumpfile("branch_decoder_tb.vcd");
-    $dumpvars(0, branch_decoder_tb);
-
-    // BEQ: branch when operands equal (SUB result zero)
     // ============================
     // BEQ: Branch if Equal
     // ============================
@@ -158,13 +145,6 @@ module branch_decoder_tb;
             expected_branch(i[5], i[4:2], i[1], i[0]), "Exhaustive");
     end
 
-    $display("\n========== TEST SUMMARY ==========");
-    $display("Total tests:  %0d", tests_run);
-    $display("Passed:       %0d", tests_run - errors);
-    $display("Failed:       %0d", errors);
-
-    if (errors == 0) $display("ALL TESTS PASSED");
-    else $display("%0d TEST(S) FAILED", errors);
-    $finish;
+    `TB_FINISH;
   end
 endmodule
