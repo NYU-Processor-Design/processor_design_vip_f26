@@ -118,6 +118,11 @@ def render(specific, default):
         for n, p, v in specific)
     name_cases = "\n".join(
         f"        {sv_case_label(p)}: ctrl_name = \"{n}\";" for n, p, _ in specific)
+    diff_checks = "\n".join(
+        f"    if (((actual.{n} ^ expected.{n}) & mask.{n}) !== '0)\n"
+        f"        s = {{s, s == \"\" ? \"\" : \", \", "
+        f"$sformatf(\"{n} exp %0d got %0d\", expected.{n}, actual.{n})}};"
+        for n, _ in SIGNALS)
     args = "input logic [6:0] opcode, input logic [2:0] funct3, input logic instr30"
 
     return f"""/*
@@ -125,6 +130,7 @@ def render(specific, default):
  Do not edit by hand. Testbench use only: the control unit RTL must not include this file.
  ctrl_mask has 1s on the bits to check; a field that is x in the CSV is 0 in both
  ctrl_expected and ctrl_mask. Check with: ((actual ^ ctrl_expected(...)) & ctrl_mask(...)) !== '0
+ ctrl_diff lists the checked fields that differ, for failure messages.
 */
 
 `ifndef CONTROL_TABLE_SVH
@@ -153,6 +159,13 @@ function automatic string ctrl_name({args});
 {name_cases}
         default: ctrl_name = "{default[0]}";
     endcase
+endfunction
+
+function automatic string ctrl_diff(input ctrl_t actual, input ctrl_t expected, input ctrl_t mask);
+    string s;
+    s = "";
+{diff_checks}
+    return s;
 endfunction
 
 `endif
