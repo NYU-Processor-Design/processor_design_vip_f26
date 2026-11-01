@@ -85,7 +85,7 @@ module reg_file_tb;
         if (rs1_out !== 0 || rs2_out !== 0)
             $fatal(1, "x0 protection failed");
 
-        $display("PASS: Register file basic tests completed");
+        $display("TEST PASSED: Register file basic tests completed");
         $finish;
     end
 
