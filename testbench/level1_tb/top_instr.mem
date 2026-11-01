@@ -1,0 +1,16 @@
+// sparse halfword-addressed image, with each instruction's low halfword first
+// gaps remain uninitialized and must not be executed
+// addi x5, x17, -16; lui x7, 0x12345; two NOPs
+@0000
+8293
+ff08
+53b7
+1234
+0013
+0000
+0013
+0000
+// final aligned word is a fetch sentinel, not an executable instruction
+@3ffe
+abcd
+1234

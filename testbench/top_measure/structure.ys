@@ -1,0 +1,15 @@
+# inspect top wiring without representing unfinished modules as completed hardware
+read_verilog -sv -lib src/alu.sv src/control_unit.sv src/data_mem.sv src/reg_file.sv
+read_verilog -sv src/branch_decoder.sv src/instr_imm.sv
+read_verilog -sv -defer src/top.sv
+read_verilog -sv testbench/top_measure/structure.sv
+hierarchy -check -top top_structure
+
+# collect the unmapped ROM and PC without technology mapping or optimization
+proc
+memory_collect
+check -assert
+select -assert-none t:$dlatch
+select -assert-count 1 t:$dff
+select -assert-count 1 t:$mem_v2
+stat
