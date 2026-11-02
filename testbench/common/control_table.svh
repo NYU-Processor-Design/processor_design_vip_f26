@@ -3,6 +3,7 @@
  Do not edit by hand. Testbench use only: the control unit RTL must not include this file.
  ctrl_mask has 1s on the bits to check; a field that is x in the CSV is 0 in both
  ctrl_expected and ctrl_mask. Check with: ((actual ^ ctrl_expected(...)) & ctrl_mask(...)) !== '0
+ ctrl_diff lists the checked fields that differ, for failure messages.
 */
 
 `ifndef CONTROL_TABLE_SVH
@@ -148,6 +149,32 @@ function automatic string ctrl_name(input logic [6:0] opcode, input logic [2:0] 
         11'b0110011_111_?: ctrl_name = "AND";
         default: ctrl_name = "NOP";
     endcase
+endfunction
+
+function automatic string ctrl_diff(input ctrl_t actual, input ctrl_t expected, input ctrl_t mask);
+    string s;
+    s = "";
+    if (((actual.branch_decoder_on ^ expected.branch_decoder_on) & mask.branch_decoder_on) !== '0)
+        s = {s, s == "" ? "" : ", ", $sformatf("branch_decoder_on exp %0d got %0d", expected.branch_decoder_on, actual.branch_decoder_on)};
+    if (((actual.mux_PC ^ expected.mux_PC) & mask.mux_PC) !== '0)
+        s = {s, s == "" ? "" : ", ", $sformatf("mux_PC exp %0d got %0d", expected.mux_PC, actual.mux_PC)};
+    if (((actual.mux_reg ^ expected.mux_reg) & mask.mux_reg) !== '0)
+        s = {s, s == "" ? "" : ", ", $sformatf("mux_reg exp %0d got %0d", expected.mux_reg, actual.mux_reg)};
+    if (((actual.RegWrite ^ expected.RegWrite) & mask.RegWrite) !== '0)
+        s = {s, s == "" ? "" : ", ", $sformatf("RegWrite exp %0d got %0d", expected.RegWrite, actual.RegWrite)};
+    if (((actual.MemWrite ^ expected.MemWrite) & mask.MemWrite) !== '0)
+        s = {s, s == "" ? "" : ", ", $sformatf("MemWrite exp %0d got %0d", expected.MemWrite, actual.MemWrite)};
+    if (((actual.mux_ALUA ^ expected.mux_ALUA) & mask.mux_ALUA) !== '0)
+        s = {s, s == "" ? "" : ", ", $sformatf("mux_ALUA exp %0d got %0d", expected.mux_ALUA, actual.mux_ALUA)};
+    if (((actual.mux_ALUB ^ expected.mux_ALUB) & mask.mux_ALUB) !== '0)
+        s = {s, s == "" ? "" : ", ", $sformatf("mux_ALUB exp %0d got %0d", expected.mux_ALUB, actual.mux_ALUB)};
+    if (((actual.ALU_funct ^ expected.ALU_funct) & mask.ALU_funct) !== '0)
+        s = {s, s == "" ? "" : ", ", $sformatf("ALU_funct exp %0d got %0d", expected.ALU_funct, actual.ALU_funct)};
+    if (((actual.sign_val ^ expected.sign_val) & mask.sign_val) !== '0)
+        s = {s, s == "" ? "" : ", ", $sformatf("sign_val exp %0d got %0d", expected.sign_val, actual.sign_val)};
+    if (((actual.read_size ^ expected.read_size) & mask.read_size) !== '0)
+        s = {s, s == "" ? "" : ", ", $sformatf("read_size exp %0d got %0d", expected.read_size, actual.read_size)};
+    return s;
 endfunction
 
 `endif
