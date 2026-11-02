@@ -607,19 +607,49 @@ module control_unit(
 
 							case (instr[31:20])
 								12'b000000000000: begin // ECALL 
-									// TODO
+									branch_decoder_on = 1'b0;
+									mux_PC = 1'b1;
+									mux_reg = 2'b00;
+									RegWrite = 1'b0;
+									MemWrite = 1'b0;
+									mux_ALUA = 2'b00;
+									mux_ALUB = 1'b0;
+									ALU_funct = 4'b0000;
+									sign_val  = 1'b0;
+									read_size = 2'b00;
 								end
 
 								12'b000000000001: begin // EBREAK 
-									// TODO
+									branch_decoder_on = 1'b0;
+									mux_PC = 1'b1;
+									mux_reg = 2'b00;
+									RegWrite = 1'b0;
+									MemWrite = 1'b0;
+									mux_ALUA = 2'b00;
+									mux_ALUB = 1'b0;
+									ALU_funct = 4'b0000;
+									sign_val  = 1'b0;
+									read_size = 2'b00;
+				
 								end
-								default: begin end
+								default: begin 
+									branch_decoder_on = 1'b0;
+									mux_PC = 1'b1;
+									mux_reg = 2'b00;
+									RegWrite = 1'b0;
+									MemWrite = 1'b0;
+									mux_ALUA = 2'b00;
+									mux_ALUB = 1'b0;
+									ALU_funct = 4'b0000;
+									sign_val  = 1'b0;
+									read_size = 2'b00;
+								end
 							endcase
 						end
 					end
 
 					default: begin 
-						// TODO
+						
 					end
 				endcase
 			end
