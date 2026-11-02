@@ -25,4 +25,23 @@ module alu(
 	* The ALU also requires the additional output of the zero flag for the
 	* purpose of its use in the Branch Decoder module.
 	*/
+
+	always_comb begin
+		case (ALU_funct)
+			4'd0: out = inA + inB; // ADD: keep the low 32 bits of the sum.
+			4'd1: out = inA - inB;
+			4'd2: out = inA << inB[4:0];
+			4'd3: out = {31'b0, ($signed(inA) < $signed(inB))};
+			4'd4: out = {31'b0, (inA < inB)};
+			4'd5: out = inA ^ inB;
+			4'd6: out = inA >> inB[4:0];
+			4'd7: out = $signed(inA) >>> inB[4:0];
+			4'd8: out = inA | inB;
+			4'd9: out = inA & inB;
+			4'd10: out = (inA + inB) & 32'hFFFF_FFFE;
+			// Undefined function codes produce a deterministic zero result.
+			default: out = 32'b0;
+		endcase
+		zflag = (out == 32'b0);
+	end
 endmodule
