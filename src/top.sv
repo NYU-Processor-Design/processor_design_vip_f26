@@ -43,10 +43,12 @@ module top #(
     integer image_file;
 `endif
 
-    // initialize PC and load the assembler image relative to the simulation directory
+    // initialize PC before the first clock edge and load the image from the working directory
+    // assembler images are padded; sparse fixtures must provide every fetched halfword
     initial begin
         pc = 32'b0;
-        // an empty filename leaves instruction memory for external initialization
+        // an empty filename skips loading without clearing memory
+        // external simulation initialization must finish before the first clock edge
         if (INSTR_MEM_FILE != "") begin
 `ifndef SYNTHESIS
             image_file = $fopen(INSTR_MEM_FILE, "r");

@@ -1,0 +1,9 @@
+// five NOPs cover startup and four sequential PC updates
+// each instruction stores its low halfword first
+// explicit addressing permits a sparse image; unlisted halfwords stay uninitialized
+@0000
+0013 0000
+0013 0000
+0013 0000
+0013 0000
+0013 0000
