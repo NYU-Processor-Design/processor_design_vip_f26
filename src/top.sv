@@ -1,24 +1,180 @@
-module top(
-	input logic clk
-	);
-	/*
-	* Top Module:
-	* The top module is required to stitch together all the different
-	* parts of the core and get it to actually run. The requirements for
-	* this module are to:
-		* instantiate all modules with the appropriate inputs
-		* create the necessary internal signals
-		* implement the MUXes used in our schema with their appropriate
-			* inputs and outputs, as well as logic.
-		* create the program counter (32-bit) and necessary PC adder and the
-			* logic necessary for sequentially changing the PC.
-		* create instruction memory with its appropriate
-		* specifications: 16-bit halfword-addressable, little-endian,
-			* with 16,384 memory locations; combinational.
-		* read the ".mem" hex files from the assembler.py output into
-			* instruction memory.
-	* This may seem like a lot to do, so I advise this to be broken up
-	* into parts that individual people may work on in order to get it
-	* completed.
-	*/
+// single-cycle integration with a byte-addressed PC and halfword instruction memory
+module top #(
+    parameter INSTR_MEM_FILE = "assembler/out/instr.mem"
+) (
+    input logic clk
+);
+    // fixed power-of-two halfword capacity determines the address slices
+    localparam int INSTR_MEM_HALFWORDS = 16384;
+    localparam int INSTR_INDEX_BITS = $clog2(INSTR_MEM_HALFWORDS);
+
+    // mux encodings match docs/control_table.csv
+    localparam logic [1:0] ALUA_RS1 = 2'd0;
+    localparam logic [1:0] ALUA_ZERO = 2'd1;
+    localparam logic [1:0] ALUA_PC = 2'd2;
+    localparam logic [1:0] WB_ALU = 2'd0;
+    localparam logic [1:0] WB_LINK = 2'd1;
+    localparam logic [1:0] WB_MEM = 2'd2;
+
+    // instruction memory and address paths
+    logic [15:0] instr_mem [0:INSTR_MEM_HALFWORDS-1];
+    logic [INSTR_INDEX_BITS-1:0] instr_index;
+    logic [31:0] instr;
+    logic [31:0] pc;
+    logic [31:0] pc_next;
+    logic [31:0] pc_plus4;
+    logic [31:0] pc_branch;
+
+    // controls use the encodings in docs/control_table.csv
+    logic branch_decoder_on;
+    logic [2:0] funct3;
+    logic mux_PC;
+    logic [1:0] mux_reg;
+    logic RegWrite;
+    logic MemWrite;
+    logic [1:0] mux_ALUA;
+    logic mux_ALUB;
+    logic [3:0] ALU_funct;
+    logic sign_val;
+    logic [1:0] read_size;
+
+    // register, immediate, execution, and writeback paths
+    logic [31:0] rs1_data;
+    logic [31:0] rs2_data;
+    logic [31:0] imm;
+    logic [31:0] alu_a;
+    logic [31:0] alu_b;
+    logic [31:0] alu_out;
+    logic zflag;
+    logic branch_taken;
+    logic [31:0] mem_data;
+    logic [31:0] writeback_data;
+
+`ifndef SYNTHESIS
+    // simulation-only image handle
+    integer image_file;
+`endif
+
+    // initialize PC before the first clock edge and load the image from the working directory
+    // assembler images are padded; sparse fixtures must provide every fetched halfword
+    initial begin
+        pc = 32'b0;
+        // an empty filename skips loading without clearing memory
+        // external simulation initialization must finish before the first clock edge
+        if (INSTR_MEM_FILE != "") begin
+`ifndef SYNTHESIS
+            image_file = $fopen(INSTR_MEM_FILE, "r");
+            // stop simulation when the requested image cannot be opened
+            if (image_file == 0) begin
+                $fatal(1, "top: cannot open instruction image '%s'", INSTR_MEM_FILE);
+            end
+            $fclose(image_file);
+`endif
+            $readmemh(INSTR_MEM_FILE, instr_mem, 0, INSTR_MEM_HALFWORDS-1);
+        end
+    end
+
+    // reject misaligned or out-of-range fetches before truncating the address
+    // zero is an invalid-fetch marker, not a NOP or a reported architectural trap
+    assign instr_index = pc[INSTR_INDEX_BITS:1]; // convert byte addresses to halfword indices
+    // aligned instructions pair an even low halfword with the next odd halfword
+    assign instr = (pc[31:INSTR_INDEX_BITS+1] == '0 && pc[1:0] == 2'b0)
+                 ? {instr_mem[{instr_index[INSTR_INDEX_BITS-1:1], 1'b1}], instr_mem[instr_index]}
+                 : 32'b0;
+
+    // reuse PC plus four for sequential execution and link writeback
+    assign pc_plus4 = pc + 32'd4;
+    assign pc_branch = pc + imm;
+    assign pc_next = mux_PC ? (branch_taken ? pc_branch : pc_plus4) : alu_out;
+
+    // advance PC on the same rising edge as register and memory writes
+    always @(posedge clk) begin
+        pc <= pc_next;
+    end
+
+    // decode execution controls from the fetched instruction
+    control_unit u_control_unit (
+        .instr(instr),
+        .branch_decoder_on(branch_decoder_on),
+        .funct3(funct3),
+        .mux_PC(mux_PC),
+        .mux_reg(mux_reg),
+        .RegWrite(RegWrite),
+        .MemWrite(MemWrite),
+        .mux_ALUA(mux_ALUA),
+        .mux_ALUB(mux_ALUB),
+        .ALU_funct(ALU_funct),
+        .sign_val(sign_val),
+        .read_size(read_size)
+    );
+
+    // read both source registers and write the selected result
+    reg_file u_reg_file (
+        .rs1(instr[19:15]),
+        .rs2(instr[24:20]),
+        .rd(instr[11:7]),
+        .data_in(writeback_data),
+        .RegWrite(RegWrite),
+        .clk(clk),
+        .rs1_out(rs1_data),
+        .rs2_out(rs2_data)
+    );
+
+    // reconstruct the immediate without rescaling branch or jump offsets
+    instr_imm u_instr_imm (
+        .instr(instr),
+        .imm(imm)
+    );
+
+    // select rs1, zero for LUI, or PC for AUIPC and JAL
+    always_comb begin
+        case (mux_ALUA)
+            ALUA_RS1: alu_a = rs1_data;
+            ALUA_ZERO: alu_a = 32'b0;
+            ALUA_PC: alu_a = pc;
+            default: alu_a = 32'b0;
+        endcase
+    end
+
+    // select the second register or decoded immediate
+    assign alu_b = mux_ALUB ? imm : rs2_data;
+
+    // execute arithmetic and comparisons, including JALR low-bit clearing
+    alu u_alu (
+        .inA(alu_a),
+        .inB(alu_b),
+        .ALU_funct(ALU_funct),
+        .out(alu_out),
+        .zflag(zflag)
+    );
+
+    // combine the branch condition with ALU comparison results
+    branch_decoder u_branch_decoder (
+        .branch_decoder_on(branch_decoder_on),
+        .funct3(funct3),
+        .zflag(zflag),
+        .ALU_out_lsb(alu_out[0]),
+        .branch_decision(branch_taken)
+    );
+
+    // stores always use rs2, independently of the ALU operand muxes
+    data_mem u_data_mem (
+        .addr(alu_out),
+        .data_in(rs2_data),
+        .sign_val(sign_val),
+        .read_size(read_size),
+        .clk(clk),
+        .MemWrite(MemWrite),
+        .data_out(mem_data)
+    );
+
+    // select the ALU result, link address, or memory data
+    always_comb begin
+        case (mux_reg)
+            WB_ALU: writeback_data = alu_out;
+            WB_LINK: writeback_data = pc_plus4;
+            WB_MEM: writeback_data = mem_data;
+            default: writeback_data = 32'b0;
+        endcase
+    end
 endmodule
