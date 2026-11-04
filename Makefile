@@ -5,7 +5,7 @@ LINT_CONFIG := build/lint_stubs.vlt
 
 # Stubs whose lint warnings are not enforced yet. Remove a module from this
 # list in the PR that implements it.
-LINT_SKIP  := alu control_unit data_mem reg_file
+LINT_SKIP  := data_mem reg_file top
 
 .PHONY: all lint l1 table-check ci clean
 
