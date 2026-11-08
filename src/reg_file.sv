@@ -1,21 +1,27 @@
+
 module reg_file(
-	input logic [4:0] rs1,
-	input logic [4:0] rs2,
-	input logic [4:0] rd,
-	input logic [31:0] data_in,
-	input logic RegWrite, // 0: write disabled, 1: write enabled
-	input logic clk,
-	output logic [31:0] rs1_out,
-	output logic [31:0] rs2_out
-	);
-	/*
-	* Register File Module:
-	* The requirements for the register file are to support reads of rs1
-	* and rs2 in parallel, as well as supporting sequential writes to rd
-	* with data from data_in. RegWrite is a control signal that determines
-	* whether we want to write on a given clock edge (posedge), and clk is
-	* our clock signal which is shared across the core.
-	* Also recall that there are 32, 32-bit registers, one of which
-	* (register x0) is hard-wired to 32'b0.
-	*/
+    input  logic [4:0]  rs1,
+    input  logic [4:0]  rs2,
+    input  logic [4:0]  rd,
+    input  logic [31:0] data_in,
+    input  logic        RegWrite,
+    input  logic        clk,
+    output logic [31:0] rs1_out,
+    output logic [31:0] rs2_out
+);
+
+    // 32 registers, each 32 bits wide
+    logic [31:0] registers [0:31];
+
+    // Two asynchronous read ports
+    assign rs1_out = (rs1 == 5'd0) ? 32'b0 : registers[rs1];
+    assign rs2_out = (rs2 == 5'd0) ? 32'b0 : registers[rs2];
+
+    // Synchronous write on rising clock edge
+    always_ff @(posedge clk) begin
+        if (RegWrite && (rd != 5'd0)) begin
+            registers[rd] <= data_in;
+        end
+    end
+
 endmodule
