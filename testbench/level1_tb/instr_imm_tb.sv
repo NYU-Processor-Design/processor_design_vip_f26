@@ -12,77 +12,96 @@ module instr_imm_tb;
 
     initial begin
 
-        // I-type: ADDI with immediate = 5
-        instr = 32'h00500013;
+        // OP-IMM (I)
+        instr = 32'h00A3_0293;
         #1;
-        `CHECK_EQ(imm, 32'd5, "ADDI immediate = 5");
+        `CHECK_EQ(imm, 32'h0000_000A, "ADDI positive immediate");
 
-        // I-type: ADDI with immediate = -1
-        instr = 32'hFFF00013;
-        #1;
-        `CHECK_EQ(imm, 32'hFFFF_FFFF, "ADDI immediate = -1");
 
-        // I-type shift: SLLI with shift amount = 3
-        instr = 32'h00301013;
+        instr = 32'hFF83_0293;
         #1;
-        `CHECK_EQ(imm, 32'd3, "SLLI shift amount = 3");
+        `CHECK_EQ(imm, 32'hFFFF_FFF8, "ADDI negative immediate");
 
-        // I-type: LOAD with immediate = 12
-        instr = 32'h00C00003;
-        #1;
-        `CHECK_EQ(imm, 32'd12, "LOAD immediate = 12");
 
-        // I-type: JALR with immediate = -4
-        instr = 32'hFFC00067;
+        instr = 32'hFFF3_7293;
         #1;
-        `CHECK_EQ(imm, 32'hFFFF_FFFC, "JALR immediate = -4");
+        `CHECK_EQ(imm, 32'hFFFF_FFFF, "ANDI negative immediate");
 
-        // S-type: STORE with immediate = 12
-        instr = 32'h00000623;
+        instr = 32'h0051_1093;
         #1;
-        `CHECK_EQ(imm, 32'd12, "STORE immediate = 12");
+        `CHECK_EQ(imm, 32'h0000_0005, "SLLI shamt 5");
 
-        // S-type: STORE with immediate = -1
-        instr = 32'hFE000FA3;
+        instr = 32'h0071_5093;
         #1;
-        `CHECK_EQ(imm, 32'hFFFF_FFFF, "STORE immediate = -1");
+        `CHECK_EQ(imm, 32'h0000_0007, "SRLI shamt 7");
 
-        // B-type: BRANCH with immediate = 8
-        instr = 32'h00000463;
+        instr = 32'h41F1_5093;
         #1;
-        `CHECK_EQ(imm, 32'd8, "BRANCH immediate = 8");
+        `CHECK_EQ(imm, 32'h0000_001F, "SRAI shamt 31");
 
-        // B-type: BRANCH with immediate = -4
-        instr = 32'hFE000EE3;
+        // LOAD (I)
+        instr = 32'h00C1_2283;
         #1;
-        `CHECK_EQ(imm, 32'hFFFF_FFFC, "BRANCH immediate = -4");
+        `CHECK_EQ(imm, 32'h0000_000C, "LW positive offset");
 
-        // U-type: LUI
-        instr = 32'h12345037;
-        #1;
-        `CHECK_EQ(imm, 32'h12345000, "LUI immediate");
 
-        // U-type: AUIPC
-        instr = 32'hABCDE017;
+        instr = 32'hFF01_0283;
         #1;
-        `CHECK_EQ(imm, 32'hABCDE000, "AUIPC immediate");
+        `CHECK_EQ(imm, 32'hFFFF_FFF0, "LB negative offset");
 
-        // J-type: JAL with immediate = 16
-        instr = 32'h0100006F;
+        // JALR (I)
+        instr = 32'hFFC1_00E7;
         #1;
-        `CHECK_EQ(imm, 32'd16, "JAL immediate = 16");
+        `CHECK_EQ(imm, 32'hFFFF_FFFC, "JALR negative immediate");
 
-        // J-type: JAL with immediate = -2
-        instr = 32'hFFFFF06F;
+        // STORE (S)
+        instr = 32'h0051_2A23;
         #1;
-        `CHECK_EQ(imm, 32'hFFFF_FFFE, "JAL immediate = -2");
+        `CHECK_EQ(imm, 32'h0000_0014, "SW positive offset");
 
-        // Unsupported opcode
-        instr = 32'h00000000;
+        instr = 32'hFE51_2823;
         #1;
-        `CHECK_EQ(imm, 32'd0, "Unknown opcode returns 0");
+        `CHECK_EQ(imm, 32'hFFFF_FFF0, "SW negative offset");
+
+        // BRANCH (B)
+        instr = 32'h0020_8863;
+        #1;
+        `CHECK_EQ(imm, 32'h0000_0010, "BEQ positive offset");
+
+        instr = 32'hFE20_9CE3;
+        #1;
+        `CHECK_EQ(imm, 32'hFFFF_FFF8, "BNE negative offset");
+
+        // LUI (U)
+        instr = 32'h1234_52B7;
+        #1;
+        `CHECK_EQ(imm, 32'h1234_5000, "LUI upper immediate");
+
+        // AUIPC (U)
+        instr = 32'hABCD_E297;
+        #1;
+        `CHECK_EQ(imm, 32'hABCD_E000, "AUIPC upper immediate");
+
+        // JAL (J)
+        instr = 32'h1000_00EF;
+        #1;
+        `CHECK_EQ(imm, 32'h0000_0100, "JAL positive offset");
+
+        instr = 32'hFE1F_F0EF;
+        #1;
+        `CHECK_EQ(imm, 32'hFFFF_FFE0, "JAL negative offset");
+
+
+        instr = 32'h0031_00B3;
+        #1;
+        `CHECK_EQ(imm, 32'h0000_0000, "ADD has no immediate");
+
+        instr = 32'hFFFF_FFFF;
+        #1;
+        `CHECK_EQ(imm, 32'h0000_0000, "Unsupported opcode defaults to zero");
 
         `TB_FINISH;
+
     end
 
 endmodule
