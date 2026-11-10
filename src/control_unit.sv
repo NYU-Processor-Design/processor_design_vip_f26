@@ -6,6 +6,7 @@ module control_unit(
 	output logic [1:0] mux_reg,
 	output logic RegWrite,
 	output logic MemWrite,
+	output logic MemRead,
 	output logic [1:0] mux_ALUA,
 	output logic mux_ALUB,
 	output logic [3:0] ALU_funct,
@@ -40,6 +41,7 @@ module control_unit(
 		mux_reg = 2'b00;
 		RegWrite = 1'b0;
 		MemWrite = 1'b0;
+		MemRead = 1'b0;
 		mux_ALUA = 2'b00;
 		mux_ALUB = 1'b0;
 		ALU_funct = 4'b0000;
@@ -118,6 +120,7 @@ module control_unit(
 			end 
 			
 			7'b0000011: begin // Loads
+				MemRead = 1'b1; // read strobe (I/O reads)
 				case(funct3)
 					3'b000: begin  // Load Byte
 						branch_decoder_on = 1'b0;
