@@ -1,14 +1,6 @@
 #!/bin/bash
 # Run the official riscv-tests rv32ui suite on a SystemVerilog core, using Verilator.
-#   usage:  sw/run_riscv_tests_sv.sh /path/to/riscv-tests
-#
-# Differences from run_riscv_tests.sh (the Icarus/Verilog version):
-#   * the RTL is *.sv, and any package files (*_pkg.sv) are compiled FIRST
-#   * Verilator compiles the core ONCE into a C++ simulator (instead of once per test).
-#     Each test then runs in its own folder containing instr.mem / data.mem, which the
-#     simulator loads with $readmemh at start-up (the testbench defaults to those names).
-#   * the testbench uses #delays, so Verilator needs --timing (Verilator 5.x)
-#
+#   usage:  sw/run_riscv_tests.sh /path/to/riscv-tests
 # needs: verilator >= 5.0, riscv64-unknown-elf-gcc, python3, a C++ compiler + make
 set -u
 RVT=${1:?path to riscv-tests checkout}
