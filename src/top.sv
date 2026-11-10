@@ -1,4 +1,4 @@
-// single-cycle integration with a byte-addressed PC and halfword instruction memory
+// single-cycle integration with a byte-addressed PC and byte instruction memory
 module top #(
     parameter IMEM_WORDS = 8192,             // 32 KB
     parameter DMEM_WORDS = 4096,             // 16 KB
@@ -24,8 +24,8 @@ module top #(
     localparam logic [1:0] WB_LINK   = 2'd1;
     localparam logic [1:0] WB_MEM    = 2'd2;
 
-    localparam logic PC_W = $clog2(IMEM_WORDS) + 2; // sets how wide the pc will be
-    localparam logic DAW  = $clog2(DMEM_WORDS) + 2; // sets how wide the data address bus will be
+    localparam PC_W = $clog2(IMEM_WORDS) + 2; // sets how wide the pc will be
+    localparam DAW  = $clog2(DMEM_WORDS) + 2; // sets how wide the data address bus will be
 
     logic [PC_W-1:0] pc;                            // BYTE address of the current instruction
     logic [31:0]     instr;
@@ -56,23 +56,23 @@ module top #(
     logic [31:0] mem_data;
     logic [31:0] writeback_data;
 
-    logic is_io  = (ALU_out[31:24] == IO_BASE[31:24]); // address space is IO
-    logic is_ram = (ALU_out[31:DAW] == DMEM_BASE[31:DAW]); // address space is RAM
-    logic run    = ~reset; // run signal true as long as reset is false
+    wire is_io  = (alu_out[31:24] == IO_BASE[31:24]); // address space is IO
+    wire is_ram = (alu_out[31:DAW] == DMEM_BASE[31:DAW]); // address space is RAM
+    wire run    = ~reset; // run signal true as long as reset is false
 
-    logic [31:0] pc32 = {{(32-PC_W){1'b0}}, pc};
-    logic [31:0] ram_word; // output from data_mem
-    logic [31:0] load_word = is_io ? io_rdata : is_ram ? ram_word : 32'b0; // input into load_align
-    logic [31:0] data_mem_out; // output from load_align
+    wire [31:0] pc32 = {{(32-PC_W){1'b0}}, pc};
+    wire [31:0] ram_word; // output from data_mem
+    wire [31:0] load_word = is_io ? io_rdata : is_ram ? ram_word : 32'b0; // input into load_align
+    wire [31:0] data_mem_out; // output from load_align
 
     // reuse PC plus four for sequential execution and link writeback
-    logic [31:0] pc_plus4    = pc32 + 32'd4;
-    logic [31:0] pc_branch   = pc32 + imm;
-    logic [PC_W-1:0] pc_sel  = mux_PC ? (branch_taken ? pc_branch[PC_W-1:0] : pc_plus4[PC_W-1:0]) : alu_out[PC_W-1:0];
-    logic [PC_W-1:0] pc_next = reset ? {PC_W{1'b0}} : {pc_sel[PC_W-1:2], 2'b00}; // reset returns PC to addr 0
+    wire [31:0] pc_plus4    = pc32 + 32'd4;
+    wire [31:0] pc_branch   = pc32 + imm;
+    wire [PC_W-1:0] pc_sel  = mux_PC ? (branch_taken ? pc_branch[PC_W-1:0] : pc_plus4[PC_W-1:0]) : alu_out[PC_W-1:0];
+    wire [PC_W-1:0] pc_next = reset ? {PC_W{1'b0}} : {pc_sel[PC_W-1:2], 2'b00}; // reset returns PC to addr 0
 
     // advance PC on the same rising edge as register and memory writes
-    always @(posedge clk) begin
+    always_ff @(posedge clk) begin
         pc <= pc_next;
     end
 
@@ -157,24 +157,24 @@ module top #(
     );
 
     // stores always use rs2, independently of the ALU operand muxes
-    data_mem u_data_mem #(
-        parameter WORDS     = DMEM_WORDS,
-        parameter INIT_FILE = DMEM_INIT
-    )(
+    data_mem #(
+        .WORDS(DMEM_WORDS),
+        .INIT_FILE(DMEM_INIT)
+    ) u_data_mem(
         .clk(clk),
         .addr(alu_out),
         .data_in(rs2_data),
-        .read_size(mem_size),
+        .mem_size(mem_size),
         .MemWrite(MemWrite & is_ram & run),
         .rd_word(ram_word)
     );
 
-    load_align LOAD_ALIGN(.word(load_word), .byte_off(ALU_out[1:0]),
+    load_align LOAD_ALIGN(.word(load_word), .byte_off(alu_out[1:0]),
         .mem_size(mem_size), .sign_val(sign_val), .data_out(data_mem_out));
 
     // FPro bus signals for addr and wdata are assigned combinationally regardless of whether RAM or IO load or store
-    assign io_addr  = ALU_out;
-    assign io_wdata = rs2_out;
+    assign io_addr  = alu_out;
+    assign io_wdata = rs2_data;
     // io_we signal only on if WE, is_io, and run are asserted, and mem_size == WORD
     // is_io is asserted if addr range is for IO
     // run signal is only asserted if reset button isn't pressed
