@@ -2,14 +2,17 @@ SRC        := $(wildcard src/*.sv)
 MODULES    := $(basename $(notdir $(SRC)))
 TABLE_GEN  := scripts/gen_control_table.py
 LINT_CONFIG := build/lint_stubs.vlt
+RVT_REPO   := https://github.com/riscv-software-src/riscv-tests.git
+RVT_REV    := 3df703cd52d5f0d8224e3c50bf03c6cb70efff98
+RVT_DIR    := build/riscv-tests
 
 # Stubs whose lint warnings are not enforced yet. Remove a module from this
 # list in the PR that implements it.
-LINT_SKIP  := data_mem top
+LINT_SKIP  :=
 
-.PHONY: all lint l1 table-check ci clean
+.PHONY: all lint l1 table-check ci isa clean
 
-all: lint l1
+all: lint l1 isa
 
 lint:
 	@mkdir -p build
@@ -36,6 +39,15 @@ table-check:
 	@python3 $(TABLE_GEN) --check
 
 ci: lint l1 table-check
+
+# official rv32ui tests on core_tb; needs riscv64-unknown-elf-gcc
+isa: $(RVT_DIR)
+	@OUT=$(CURDIR)/build/isa sw/run_riscv_tests.sh $(abspath $(RVT_DIR))
+
+$(RVT_DIR):
+	git init -q $@
+	git -C $@ fetch -q --depth 1 $(RVT_REPO) $(RVT_REV)
+	git -C $@ checkout -q FETCH_HEAD
 
 clean:
 	rm -rf build

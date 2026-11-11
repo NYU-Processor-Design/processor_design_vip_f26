@@ -20,3 +20,16 @@ jobs:
 
       - name: Lint, level 1 tests, control table check
         run: make ci
+
+  isa:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install simulator and RISC-V toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y verilator gcc-riscv64-unknown-elf g++ make python3
+
+      - name: riscv-tests rv32ui
+        run: make isa
