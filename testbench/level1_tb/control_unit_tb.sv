@@ -7,7 +7,7 @@ module control_unit_tb;
     localparam int RANDOM_FILLS = 4;
 
     logic [31:0] instr;
-    logic        branch_decoder_on, mux_PC, RegWrite, MemWrite, mux_ALUB, sign_val;
+    logic        branch_decoder_on, mux_PC, RegWrite, MemWrite, MemRead, mux_ALUB, sign_val;
     logic [1:0]  mux_reg, mux_ALUA, read_size;
     logic [2:0]  funct3;
     logic [3:0]  ALU_funct;
@@ -21,6 +21,7 @@ module control_unit_tb;
         .mux_reg(mux_reg),
         .RegWrite(RegWrite),
         .MemWrite(MemWrite),
+        .MemRead(MemRead),
         .mux_ALUA(mux_ALUA),
         .mux_ALUB(mux_ALUB),
         .ALU_funct(ALU_funct),
@@ -28,7 +29,7 @@ module control_unit_tb;
         .read_size(read_size)
     );
 
-    assign actual = {branch_decoder_on, mux_PC, mux_reg, RegWrite, MemWrite,
+    assign actual = {branch_decoder_on, mux_PC, mux_reg, RegWrite, MemWrite, MemRead,
                      mux_ALUA, mux_ALUB, ALU_funct, sign_val, read_size};
 
     task automatic check(input logic [31:0] i);
