@@ -3,7 +3,9 @@ module data_mem #(
 	parameter INIT_FILE = "data.mem"
 )(
 	input  logic        clk,
+	/* verilator lint_off UNUSEDSIGNAL */ // upper bits are decoded in top
 	input  logic [31:0] addr,
+	/* verilator lint_on UNUSEDSIGNAL */
 	input  logic [31:0] data_in,
 	input  logic        MemWrite,
 	input  logic [1:0]  mem_size,
