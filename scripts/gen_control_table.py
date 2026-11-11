@@ -32,6 +32,7 @@ SIGNALS = [
     ("mux_reg", 2),
     ("RegWrite", 1),
     ("MemWrite", 1),
+    ("MemRead", 1),
     ("mux_ALUA", 2),
     ("mux_ALUB", 1),
     ("ALU_funct", 4),

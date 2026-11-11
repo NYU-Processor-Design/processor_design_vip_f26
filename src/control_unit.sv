@@ -194,6 +194,7 @@ module control_unit(
 						mux_reg = 2'b00;
 						RegWrite = 1'b0;
 						MemWrite = 1'b0;
+						MemRead = 1'b0;
 						mux_ALUA = 2'b00;
 						mux_ALUB = 1'b0;
 						ALU_funct = 4'b0000;
