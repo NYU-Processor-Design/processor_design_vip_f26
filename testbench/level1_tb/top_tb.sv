@@ -11,24 +11,29 @@ module top_tb;
 
     // clock stimulus and optional waveform path
     logic clk;
+    logic reset;
+    logic [31:0] io_addr, io_wdata;
+    logic io_we, io_re;
     string wave_file;
 
-    // initialize the fixture below instead of loading an external image
+    // instr_mem starts as all NOPs when no image is given
     top #(
-        .INSTR_MEM_FILE("")
+        .IMEM_INIT(""),
+        .DMEM_INIT("")
     ) dut (
-        .clk(clk)
+        .clk(clk),
+        .reset(reset),
+        .io_addr(io_addr),
+        .io_wdata(io_wdata),
+        .io_we(io_we),
+        .io_re(io_re),
+        .io_rdata(32'h0)
     );
 
     // generate a waveform without replacing unfinished production modules
     initial begin
         clk = 1'b0;
-
-        // preload little-endian NOPs before the first rising edge
-        for (int index = 0; index < FIXTURE_INSTRUCTIONS; index++) begin
-            dut.instr_mem[2 * index] = NOP_INSTRUCTION[15:0]; // low halfword first
-            dut.instr_mem[2 * index + 1] = NOP_INSTRUCTION[31:16];
-        end
+        reset = 1'b1;
 
         // accept the existing level 1 runner's waveform destination
         if (!$value$plusargs("wave=%s", wave_file)) begin
@@ -40,6 +45,9 @@ module top_tb;
         $display("top: unfinished dependencies may propagate unknown values");
 
         // use the same cycle count for fixture sizing and clock stimulus
+        #5 clk = 1'b1;
+        #5 clk = 1'b0;
+        reset = 1'b0;
         repeat (SMOKE_CYCLES) begin
             #5 clk = 1'b1; // 10 ns clock period
             #5 clk = 1'b0;
