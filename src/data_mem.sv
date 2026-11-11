@@ -21,7 +21,8 @@ module data_mem #(
         if (INIT_FILE != "") $readmemh(INIT_FILE, mem);
     end
 
-	logic [ADDR_WIDTH-1:0] word_addr = addr[ADDR_WIDTH+1:2]; // ignore the last 2 bits; word addressing
+	logic [ADDR_WIDTH-1:0] word_addr;
+	assign word_addr = addr[ADDR_WIDTH+1:2]; // ignore the last 2 bits; word addressing
 	assign rd_word = mem[word_addr];
 
 	logic [3:0]  byte_en; // set combinationally for purposes of writes
