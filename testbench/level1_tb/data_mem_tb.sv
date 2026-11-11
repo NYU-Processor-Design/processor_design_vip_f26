@@ -35,7 +35,7 @@ module data_mem_tb();
 	    if (rd_word !== 32'h0) begin
 	    	$display("FAIL out of range read: got=%h exp=0", rd_word); $finish;
 	    end
-        $display("ALL TESTS PASSED");
+        $display("TEST PASSED");
         $finish;
     end
 endmodule
