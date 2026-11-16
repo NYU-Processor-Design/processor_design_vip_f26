@@ -54,7 +54,7 @@ Within unit and integration testing, there are three levels of testing which is 
 
 ### Running the Checks
 
-The same checks run locally and in CI (`.github/workflows/sim.yml`, on every push and pull request). They need Icarus Verilog, Verilator, g++, make, and Python 3.
+The same checks run locally and in CI (`.github/workflows/sim.yml`, on every push and pull request). They need Icarus Verilog, Verilator, g++, make, and Python 3; `make isa` also needs the RISC-V GCC (`gcc-riscv64-unknown-elf`).
 
 * `make lint`: lints each module in `src/` with `verilator -Wall`, then compiles everything with Icarus.
 	* Modules listed in `LINT_SKIP` in the `Makefile` are unfinished stubs: they still fail on errors, but warnings are not enforced. Remove your module from that list in the pull request that implements it.
@@ -63,4 +63,6 @@ The same checks run locally and in CI (`.github/workflows/sim.yml`, on every pus
 	* `<module>_tb.cpp` is built with Verilator against `src/<module>.sv`.
 	* Logs and waveforms go to `build/l1/` (`<testbench file>.log` and `<testbench file>.vcd`).
 * `make table-check`: fails if `testbench/common/control_table.svh` is out of date with `docs/control_table.csv`; run `python3 scripts/gen_control_table.py` to regenerate it.
-* `make ci`: runs all of the above, in that order. This is what CI runs.
+* `make isa`: runs the official riscv-tests rv32ui suite on `testbench/integration-test/core_tb.sv`. The first run fetches riscv-tests at the commit pinned in the `Makefile` into `build/riscv-tests`; pass `RVT_DIR=<path>` to use an existing checkout instead.
+* `make ci`: runs lint, level 1, and the table check, in that order. CI runs this and `make isa` as two separate jobs.
+* `make` (or `make all`): runs lint, level 1, and `make isa`.

@@ -15,3 +15,4 @@ module instr_mem #(
     end
     always @(posedge clk) instr <= mem[word_addr]; // sequential reads; maps to BRAM for FPGA
 endmodule
+

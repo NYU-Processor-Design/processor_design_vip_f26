@@ -53,7 +53,6 @@ module top #(
     logic [31:0] alu_out;
     logic zflag;
     logic branch_taken;
-    logic [31:0] mem_data;
     logic [31:0] writeback_data;
 
     wire is_io  = (alu_out[31:24] == IO_BASE[31:24]); // address space is IO
@@ -67,8 +66,10 @@ module top #(
 
     // reuse PC plus four for sequential execution and link writeback
     wire [31:0] pc_plus4    = pc32 + 32'd4;
-    wire [31:0] pc_branch   = pc32 + imm;
+    wire [PC_W-1:0] pc_branch = pc + imm[PC_W-1:0];
+    /* verilator lint_off UNUSEDSIGNAL */ // pc_next drops the low two bits
     wire [PC_W-1:0] pc_sel  = mux_PC ? (branch_taken ? pc_branch[PC_W-1:0] : pc_plus4[PC_W-1:0]) : alu_out[PC_W-1:0];
+    /* verilator lint_on UNUSEDSIGNAL */
     wire [PC_W-1:0] pc_next = reset ? {PC_W{1'b0}} : {pc_sel[PC_W-1:2], 2'b00}; // reset returns PC to addr 0
 
     // advance PC on the same rising edge as register and memory writes
