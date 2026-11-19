@@ -1,6 +1,6 @@
 module data_mem #(
 	parameter WORDS     = 2048,            // 2048 words = 8 KB
-	parameter INIT_FILE = "data.mem"
+	parameter string INIT_FILE = "data.mem"
 )(
 	input  logic        clk,
 	input  logic [31:0] addr,
