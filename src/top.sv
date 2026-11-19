@@ -169,7 +169,7 @@ module top #(
         .rd_word(ram_word)
     );
 
-    load_align LOAD_ALIGN(.word(load_word), .byte_off(alu_out[1:0]),
+    load_align u_load_align(.word(load_word), .byte_off(alu_out[1:0]),
         .mem_size(mem_size), .sign_val(sign_val), .data_out(data_mem_out));
 
     // FPro bus signals for addr and wdata are assigned combinationally regardless of whether RAM or IO load or store
