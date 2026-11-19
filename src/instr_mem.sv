@@ -1,6 +1,6 @@
 module instr_mem #(
-    parameter WORDS     = 8192,         // 32 KB
-    parameter INIT_FILE = "instr.mem"
+    parameter        WORDS     = 8192,         // 32 KB
+    parameter string INIT_FILE = "instr.mem"
 )(
     input                       clk,
     input  [$clog2(WORDS)-1:0]  word_addr, // $clog2(WORDS) gets address width for word addressing
