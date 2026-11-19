@@ -100,7 +100,7 @@ module top #(
     end
 
     // the simple fact pc_next is the word_addr passed into instr_mem makes its sequential reads possible (for purposes of inferred bram)
-    instr_mem #(.WORDS(IMEM_WORDS), .INIT_FILE(IMEM_INIT)) INSTR_MEM(
+    instr_mem #(.WORDS(IMEM_WORDS), .INIT_FILE(IMEM_INIT)) u_instr_mem (
         .clk(clk), .word_addr(pc_next[PC_W-1:2]), .instr(instr));
 
     // decode execution controls from the fetched instruction
