@@ -83,17 +83,13 @@ module fpro_mmio_sys #(
     // <<< SLOT 0 TIMER
 
     // >>> SLOT 1 UART
-    // TODO (fpro_uart): instantiate your fpro_uart here. Connect the slot interface
-    //   exactly like scratch_slot6 at the bottom of this file, using slot
-    //   number `S1_UART for cs and rd_data. Suggested instance name: uart_slot1
-    //   parameters : .CLK_HZ(CLK_HZ), .BAUD(9600)
-    //   pins       :
-    //       .rx         -> uart_rx
-    //       .tx         -> uart_tx
-    // Then DELETE the placeholder lines below (they only keep the design
-    // compiling while the core is missing).
-    assign slot_rd[`S1_UART] = `FPRO_UNUSED_RD;   // placeholder
-    assign uart_tx = 1'b1;                    // placeholder
+    // connect the console to the board's USB-UART pins
+    fpro_uart #(.CLK_HZ(CLK_HZ), .BAUD(9600)) uart_slot1 (
+        .clk(clk), .reset(reset),
+        .cs(slot_cs[`S1_UART]), .read(mmio_rd), .write(mmio_wr),
+        .addr(slot_addr), .wr_data(mmio_wr_data),
+        .rd_data(slot_rd[`S1_UART]), .rx(uart_rx), .tx(uart_tx)
+    );
     // <<< SLOT 1 UART
 
     // >>> SLOT 2 GPIO
