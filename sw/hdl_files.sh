@@ -12,6 +12,7 @@ RTL_SRCS=(
     "$ROOT/src/control_unit.sv"
     "$ROOT/src/reg_file.sv"
     "$ROOT/src/data_mem.sv"
+    "$ROOT/src/load_align.sv"
     "$ROOT/src/instr_mem.sv"
     "$ROOT/src/instr_imm.sv"
     "$ROOT/src/branch_decoder.sv"
