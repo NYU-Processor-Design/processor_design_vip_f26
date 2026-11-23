@@ -97,17 +97,21 @@ module fpro_mmio_sys #(
     // <<< SLOT 1 UART
 
     // >>> SLOT 2 GPIO
-    // TODO (fpro_gpio): instantiate your fpro_gpio here. Connect the slot interface
-    //   exactly like scratch_slot6 at the bottom of this file, using slot
-    //   number `S2_GPIO for cs and rd_data. Suggested instance name: gpio_slot2
-    //   parameters : .N_IN(`N_BTN+`N_SW), .N_OUT(`N_LED)
-    //   pins       :
-    //       .din        -> gpio_in
-    //       .dout       -> gpio_out
-    // Then DELETE the placeholder lines below (they only keep the design
-    // compiling while the core is missing).
-    assign slot_rd[`S2_GPIO] = `FPRO_UNUSED_RD;   // placeholder
-    assign gpio_out = '0;                     // placeholder
+    fpro_gpio #(
+        .N_IN(`N_BTN+`N_SW),
+        .N_OUT(`N_LED)
+    ) gpio_slot2 (
+        .clk(clk),
+        .reset(reset),
+        .cs(slot_cs[`S2_GPIO]),
+        .read(mmio_rd),
+        .write(mmio_wr),
+        .addr(slot_addr),
+        .wr_data(mmio_wr_data),
+        .rd_data(slot_rd[`S2_GPIO]),
+        .din(gpio_in),
+        .dout(gpio_out)
+    );
     // <<< SLOT 2 GPIO
 
     // >>> SLOT 3 SPI

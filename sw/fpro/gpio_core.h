@@ -41,51 +41,60 @@ public:
     // Set all output pins (LEDs) at once. Remember the value in out_, so that
     // write(bit, value) below can change one bit without touching the others.
     void write(uint32_t data) {
-        // TODO
-        (void)data;
+        out_ = data;
+        io_write(base_, REG_OUT, out_);
     }
 
     // Set ONE output pin to 0 or 1 and leave the others unchanged.
     // Hint: update out_ with bit_write(out_, bit_pos, value), then write it out.
     void write(int bit_pos, int value) {
-        // TODO
-        (void)bit_pos; (void)value;
+        bit_write(out_, bit_pos, value);
+	io_write(base_, REG_OUT, out_);
     }
 
     // Read back the output register from the hardware (offset 0).
     uint32_t read_out() const {
-        return 0;   // TODO
+        return io_read(base_, REG_OUT);
     }
 
     // Read all input pins (offset 1).
     uint32_t read() const {
-        return 0;   // TODO
+        return io_read(base_, REG_IN);
     }
 
     // Read one input pin: 0 or 1. Hint: bit_read(read(), bit_pos)
     int read(int bit_pos) const {
-        (void)bit_pos;
-        return 0;   // TODO
+        return bit_read(read(), bit_pos);
     }
 
     // The 4 switches (input bits 3:0) and the 4 buttons (input bits 7:4),
     // each returned in bits 3:0.
-    uint32_t switches() const { return 0; }   // TODO
-    uint32_t buttons() const  { return 0; }   // TODO
+    uint32_t switches() const {
+	return read() & 0xF;
+    }
+    uint32_t buttons() const  {
+	return (read() >> 4) & 0xF;
+    }
 
     // Read the EDGE register (offset 2), and clear the bits that are 1 in mask.
-    uint32_t edges() const { return 0; }      // TODO
+    uint32_t edges() const {
+	return io_read(base_, REG_EDGE);
+    }
     void clear_edges(uint32_t mask) {
-        // TODO
-        (void)mask;
+        io_write(base_, REG_EDGE, mask);
     }
 
     // Has button `btn` (0..3) been pressed since the last call?
     // If its EDGE bit (bit 4 + btn) is set: clear that bit only and return true.
     // Otherwise return false. Each press is reported exactly once.
     bool pressed(int btn) {
-        (void)btn;
-        return false;   // TODO
+        uint32_t mask = 1u << (4 + btn);
+
+	if (edges() & mask) {
+		clear_edges(mask);
+		return true;
+	}
+        return false;
     }
 
 private:

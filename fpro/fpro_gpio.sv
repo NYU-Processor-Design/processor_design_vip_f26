@@ -66,17 +66,62 @@ module fpro_gpio #(
     input  logic [N_IN-1:0]  din,
     output logic [N_OUT-1:0] dout
 );
-    // TODO (R1): write enables for offset 0 (DATA_OUT) and offset 2 (EDGE clear)
+                     // TODO (R1): write enables for offset 0 (DATA_OUT) and offset 2 (EDGE clear)
 
-    // TODO: DATA_OUT register (always_ff, reset to 0) driving dout
+                        // TODO: DATA_OUT register (always_ff, reset to 0) driving dout
+	logic wr_out_en;
+	logic wr_edge_clr;
 
-    // TODO (R3): two-flip-flop synchronizer for din
+	assign wr_out_en   = cs && write && (addr == 5'd0);
+	assign wr_edge_clr = cs && write && (addr == 5'd2);
 
-    // TODO (R4): one more flip-flop + rising-edge flags (EDGE register)
+	always_ff @(posedge clk) begin
+        if (reset)
+            dout <= '0;
+        else if (wr_out_en)
+            dout <= wr_data[N_OUT-1:0];
+	end
+                        // TODO (R3): two-flip-flop synchronizer for din
+	logic [N_IN-1:0] din_sync1;
+	logic [N_IN-1:0] din_sync2;
 
-    // TODO (R2): read multiplexer (always_comb case on addr)
+	always_ff @(posedge clk) begin
+            if (reset) begin
+                din_sync1 <= '0;
+                din_sync2 <= '0;
+            end else begin
+                din_sync1 <= din;
+                din_sync2 <= din_sync1;
+            end
+	end
+                        // TODO (R4): one more flip-flop + rising-edge flags (EDGE register)
+	logic [N_IN-1:0] din_prev;
+	logic [N_IN-1:0] edge_reg;
+	logic [N_IN-1:0] rising_edge;
 
-    // ---- placeholders so the project compiles: DELETE these as you implement ----
-    assign dout    = '0;
-    assign rd_data = '0;
+	assign rising_edge = din_sync2 & ~din_prev;
+
+	always_ff @(posedge clk) begin
+            if (reset) begin
+                din_prev <= '0;
+                edge_reg <= '0;
+            end else begin
+                din_prev <= din_sync2;
+
+                if (wr_edge_clr)
+                        edge_reg <= (edge_reg & ~wr_data[N_IN-1:0]) | rising_edge;
+                else
+                        edge_reg <= edge_reg | rising_edge;
+            end
+	end
+                        // TODO (R2): read multiplexer (always_comb case on addr)
+	always_comb begin
+            case (addr)
+                5'd0:    rd_data = 32'(dout);
+                5'd1:    rd_data = 32'(din_sync2);
+                5'd2:    rd_data = 32'(edge_reg);
+                default: rd_data = 32'd0;
+            endcase
+	end
+                        // ---- placeholders so the project compiles: DELETE these as you implement ----
 endmodule
