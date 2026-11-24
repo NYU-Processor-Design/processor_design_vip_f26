@@ -2,8 +2,8 @@
 module top #(
     parameter IMEM_WORDS = 8192,             // 32 KB
     parameter DMEM_WORDS = 4096,             // 16 KB
-    parameter string IMEM_INIT  = "instr.mem",
-    parameter string DMEM_INIT  = "data.mem",
+    parameter IMEM_INIT  = "instr.mem",
+    parameter DMEM_INIT  = "data.mem",
     parameter DMEM_BASE  = 32'h1000_0000,
     parameter IO_BASE    = 32'hC000_0000
 ) (

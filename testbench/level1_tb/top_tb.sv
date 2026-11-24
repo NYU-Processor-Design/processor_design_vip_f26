@@ -1,52 +1,60 @@
-// level 1 compilation and clocked simulation without functional output checks
+// Level 1 reset and instruction-fetch smoke test using the current core interface.
 module top_tb;
-    // local timing keeps the clock independent of other modules
     timeunit 1ns;
     timeprecision 1ps;
 
-    // one extra instruction covers the fetch after the final PC update
+    `include "tb_utils.svh"
+
     localparam int SMOKE_CYCLES = 4;
-    localparam int FIXTURE_INSTRUCTIONS = SMOKE_CYCLES + 1;
     localparam logic [31:0] NOP_INSTRUCTION = 32'h00000013;
 
-    // clock stimulus and optional waveform path
     logic clk;
-    string wave_file;
+    logic reset;
+    logic [31:0] io_addr;
+    logic [31:0] io_wdata;
+    logic io_we;
+    logic io_re;
 
-    // initialize the fixture below instead of loading an external image
+    // Empty image names select the memories' built-in NOP/zero initialization.
     top #(
-        .INSTR_MEM_FILE("")
+        .IMEM_WORDS(16),
+        .DMEM_WORDS(16),
+        .IMEM_INIT(""),
+        .DMEM_INIT("")
     ) dut (
-        .clk(clk)
+        .clk(clk),
+        .reset(reset),
+        .io_addr(io_addr),
+        .io_wdata(io_wdata),
+        .io_we(io_we),
+        .io_re(io_re),
+        .io_rdata(32'b0)
     );
 
-    // generate a waveform without replacing unfinished production modules
     initial begin
         clk = 1'b0;
+        reset = 1'b1;
 
-        // preload little-endian NOPs before the first rising edge
-        for (int index = 0; index < FIXTURE_INSTRUCTIONS; index++) begin
-            dut.instr_mem[2 * index] = NOP_INSTRUCTION[15:0]; // low halfword first
-            dut.instr_mem[2 * index + 1] = NOP_INSTRUCTION[31:16];
-        end
-
-        // accept the existing level 1 runner's waveform destination
-        if (!$value$plusargs("wave=%s", wave_file)) begin
-            wave_file = "top_tb.vcd";
-        end
-        $dumpfile(wave_file);
-        $dumpvars(0, top_tb);
-        $display("top: smoke simulation only; no functional output checks");
-        $display("top: unfinished dependencies may propagate unknown values");
-
-        // use the same cycle count for fixture sizing and clock stimulus
-        repeat (SMOKE_CYCLES) begin
-            #5 clk = 1'b1; // 10 ns clock period
+        repeat (2) begin
+            #5 clk = 1'b1;
             #5 clk = 1'b0;
         end
+        `CHECK_EQ(dut.pc, 0, "reset returns PC to zero")
+        `CHECK_EQ(dut.instr, NOP_INSTRUCTION, "reset fetches a NOP")
+        `CHECK_EQ(io_we, 1'b0, "reset disables IO writes")
+        `CHECK_EQ(io_re, 1'b0, "reset disables IO reads")
 
-        // the runner marker reports simulation completion only
-        $display("TEST PASSED: top compiled and completed %0d clock cycles", SMOKE_CYCLES);
-        $finish;
+        reset = 1'b0;
+        for (int cycle = 0; cycle < SMOKE_CYCLES; cycle++) begin
+            #5 clk = 1'b1;
+            #1;
+            `CHECK_EQ(dut.pc, (cycle + 1) * 4, "NOP advances PC by four")
+            `CHECK_EQ(dut.instr, NOP_INSTRUCTION, "instruction memory supplies NOPs")
+            `CHECK_EQ(io_we, 1'b0, "NOP does not write IO")
+            `CHECK_EQ(io_re, 1'b0, "NOP does not read IO")
+            #4 clk = 1'b0;
+        end
+
+        `TB_FINISH
     end
 endmodule
